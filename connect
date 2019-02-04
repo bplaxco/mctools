@@ -1,0 +1,35 @@
+#! /usr/bin/python
+
+import threading
+import readline
+import socket
+import sys
+
+# Setup readline
+readline.parse_and_bind('tab: complete')
+readline.parse_and_bind('set editing-mode emacs')
+
+# Connect
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+s.connect(('127.0.0.1', 4242))
+
+# Listen loop
+def listen():
+    while True:
+        sys.stdout.write('\r'+' '*(len(readline.get_line_buffer())+2)+'\r')
+        print s.recv(2048)
+        sys.stdout.write('> ' + readline.get_line_buffer())
+
+# Start listen loop
+t = threading.Thread(listen=out)
+t.daemon = True
+t.start()
+
+# Take user input
+try:
+    while True:
+        line = raw_input('> ')
+        s.send(line + '\n')
+except:
+    print "Stopping client... service might still be running"

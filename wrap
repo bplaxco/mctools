@@ -1,0 +1,58 @@
+#! /usr/bin/env node
+
+/*==============================================================================
+
+  This program takes the I/O from another program and feeds it to a created Unix
+  Socket named `process.sock`
+
+  Dependencies:
+    * Node.js
+    * An OS that supports Unix Sockets
+    * NetCat (optional)
+
+  To run this program:
+    `node process_wraper.js <program name> <arg1> <agr2> <etc>`
+
+  To access the I/O stream from the program:
+    You can connect to it via any standard way you connect to a
+    Unix socket, my favorite is NetCat
+
+    Example: `nc -U process.sock`
+
+  To end the program:
+    Simply end the program that has been passed to it.
+
+==============================================================================*/
+
+var net = require('net');
+var spawn = require('child_process').spawn;
+var program = spawn(process.argv.splice(0,3)[2], process.argv);
+var sockets = [];
+
+var server = net.createServer(function (socket) {
+  sockets.push(socket);
+
+  socket.on('data', function(data) {
+    program.stdin.write(data.toString());
+  });
+
+  socket.on('end', function() {
+    sockets.splice(sockets.indexOf(socket), 1);
+  })
+});
+
+program.stdout.on('data', function(data) {
+  sockets.forEach(function(socket) {
+    socket.write(data.toString());
+  });
+});
+
+program.on('close', function() {
+  server.close();
+
+  sockets.forEach(function(socket) {
+    socket.end();
+  });
+});
+
+server.listen(4242, '127.0.0.1');
