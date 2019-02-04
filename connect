@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python2
 
 import threading
 import readline
@@ -22,7 +22,7 @@ def listen():
         sys.stdout.write('> ' + readline.get_line_buffer())
 
 # Start listen loop
-t = threading.Thread(listen=out)
+t = threading.Thread(target=listen)
 t.daemon = True
 t.start()
 
