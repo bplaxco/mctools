@@ -33,6 +33,7 @@ var server = net.createServer(function (socket) {
   sockets.push(socket);
 
   socket.on('data', function(data) {
+    process.stdout.write(data.toString());
     program.stdin.write(data.toString());
   });
 
@@ -42,6 +43,7 @@ var server = net.createServer(function (socket) {
 });
 
 program.stdout.on('data', function(data) {
+  process.stdout.write(data.toString());
   sockets.forEach(function(socket) {
     socket.write(data.toString());
   });

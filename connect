@@ -1,4 +1,4 @@
-#! /usr/bin/python2
+#! /usr/bin/python3
 
 import threading
 import readline
@@ -18,8 +18,9 @@ s.connect(('127.0.0.1', 4242))
 def listen():
     while True:
         sys.stdout.write('\r'+' '*(len(readline.get_line_buffer())+2)+'\r')
-        print s.recv(2048)
-        sys.stdout.write('> ' + readline.get_line_buffer())
+        sys.stdout.write(s.recv(2048).decode())
+        sys.stdout.write(readline.get_line_buffer())
+        sys.stdout.flush()
 
 # Start listen loop
 t = threading.Thread(target=listen)
@@ -29,7 +30,7 @@ t.start()
 # Take user input
 try:
     while True:
-        line = raw_input('> ')
-        s.send(line + '\n')
+        s.send((input() + '\n').encode())
 except:
-    print "Stopping client... service might still be running"
+    s.close()
+    print("Stopping client... service might still be running")
