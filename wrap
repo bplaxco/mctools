@@ -7,7 +7,6 @@
 
   Dependencies:
     * Node.js
-    * An OS that supports Unix Sockets
     * NetCat (optional)
 
   To run this program:
