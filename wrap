@@ -2,8 +2,7 @@
 
 /*==============================================================================
 
-  This program takes the I/O from another program and feeds it to a created Unix
-  Socket named `process.sock`
+  This program takes the I/O from another program and feeds it to a TCP socket.
 
   Dependencies:
     * Node.js
