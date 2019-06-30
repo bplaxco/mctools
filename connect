@@ -14,7 +14,7 @@ class BufferManger(object):
     ]
 
     def __init__(self):
-        for opt in READLINE_OPTS:
+        for opt in self.READLINE_OPTS:
             readline.parse_and_bind(opt)
 
     def _write(self, text):
