@@ -5,32 +5,71 @@ import readline
 import socket
 import sys
 
-# Setup readline
-readline.parse_and_bind('tab: complete')
-readline.parse_and_bind('set editing-mode emacs')
 
-# Connect
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-s.connect(('127.0.0.1', 4242))
+class BufferManger(object):
+    CLR_LINE = '\r\033[K'
+    READLINE_OPTS = [
+        'tab: complete'
+        'set editing-mode emacs'
+    ]
 
-# Listen loop
-def listen():
-    while True:
-        sys.stdout.write('\r'+' '*(len(readline.get_line_buffer())+2)+'\r')
-        sys.stdout.write(s.recv(2048).decode())
-        sys.stdout.write(readline.get_line_buffer())
+    def __init__(self):
+        for opt in READLINE_OPTS:
+            readline.parse_and_bind(opt)
+
+    def _write(self, text):
+        sys.stdout.write(text)
+
+    def _flush(self):
         sys.stdout.flush()
 
-# Start listen loop
-t = threading.Thread(target=listen)
-t.daemon = True
-t.start()
+    def on_recv(self, text):
+        self._write(self.CLR_LINE)
+        self._write(text)
+        self._write(readline.get_line_buffer())
+        self._flush()
 
-# Take user input
-try:
-    while True:
-        s.send((input() + '\n').encode())
-except:
-    s.close()
-    print("Stopping client... service might still be running")
+
+class Client(object):
+    RECV_SIZE = 2048
+
+    def __init__(self, host, port):
+        self.__bman = BufferManger()
+        self.__host = host
+        self.__port = port
+
+    def start(self):
+        self.__s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.__s.connect((self.__host, self.__port))
+
+        # Start listner
+        self.__t = threading.Thread(target=self._listen)
+        self.__t.daemon = True
+        self.__t.start()
+
+        self._prompt()
+
+    def _send(self, text):
+        self.__s.send((text + '\n').encode())
+
+    def _listen(self):
+        while True:
+            self.__bman.on_recv(self.__s.recv(self.RECV_SIZE).decode())
+
+    def _prompt(self):
+        while True:
+            self._send(input())
+
+    def close(self):
+        self.__s.close()
+
+
+if __name__ == "__main__":
+    c = Client('127.0.0.1', 4242)
+    try:
+        c.start()
+    except:
+        print("Client stopping...")
+    finally:
+        c.close()
