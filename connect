@@ -43,7 +43,7 @@ class Client(object):
         self.__s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__s.connect((self.__host, self.__port))
 
-        # Start listner
+        # Start listener
         self.__t = threading.Thread(target=self._listen)
         self.__t.daemon = True
         self.__t.start()
